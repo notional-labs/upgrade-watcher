@@ -1,7 +1,7 @@
 {
   "private": false,
   "scripts": {
-    "start": "node main.js"
+    "scanner": "node scanner/main.js"
   },
   "dependencies": {
     "moment": "^2.29.4"

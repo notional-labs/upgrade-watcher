@@ -1,6 +1,6 @@
 require('dotenv').config({ path: '.env', debug: true });
-const watcher = require('./watcher');
+const scanner = require('./scanner');
 
 (async () => {
-  await watcher.start();
+  await scanner.start();
 })();
