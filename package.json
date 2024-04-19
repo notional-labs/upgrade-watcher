@@ -1,7 +1,8 @@
 {
   "private": false,
   "scripts": {
-    "start": "node main.js"
+    "scanner": "node scanner/main.js",
+    "test": "jest"
   },
   "dependencies": {
     "moment": "^2.29.4"
@@ -14,8 +15,8 @@
     "jest": "^29.6.1",
     "lodash": "^4.17.21",
     "node-cron": "^3.0.2",
-    "node-fetch-commonjs": "^3.2.4",
-    "rqlite-js": "^2.5.6",
+    "sequelize": "^6.37.3",
+    "sqlite3": "^5.1.7",
     "sqlstring": "^2.3.3"
   }
 }
