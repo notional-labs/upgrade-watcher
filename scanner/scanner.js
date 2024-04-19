@@ -1,4 +1,4 @@
-const { sequelize, sync, set_ScanStatus, get_ScanStatus } = require('../lib/db.js');
+const { sequelize, sync, set_ScanStatus, get_ScanStatus, put_Proposal } = require('../lib/db.js');
 const {sleep} = require("../lib/utils.js");
 
 const fetch_proposal = async (chain, proposal_id) => {
@@ -121,6 +121,14 @@ const start = async (chain) => {
 
       if (is_matched(proposal, latest_block_height)) {
         console.log(`[${chain}] found proposal matched ${last_id}`);
+        const p = {
+          id: `${chain}_${proposal['proposal']['proposal_id']}`,
+          chain,
+          status: proposal['proposal']['status'],
+          name: proposal['proposal']['content']['plan']['name'],
+          height: parseInt(proposal['proposal']['content']['plan']['height']),
+        }
+        await put_Proposal(p);
       }
 
       last_id++;
