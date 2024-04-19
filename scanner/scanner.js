@@ -2,8 +2,6 @@ const { sequelize, sync, set_ScanStatus, get_ScanStatus } = require('../lib/db.j
 const {sleep} = require("../lib/utils.js");
 
 const fetch_proposal = async (chain, proposal_id) => {
-
-
   const url = `http:///a-${chain}--${process.env.NOTIONAL_API_KEY}.gw.notionalapi.net/cosmos/gov/v1beta1/proposals/${proposal_id}`;
   // console.log(url);
   const response = await fetch(url);
@@ -41,7 +39,10 @@ const get_latest_block_height = async (chain) => {
 
 const is_matched = (proposal, latest_block_height) => {
   // console.log(JSON.stringify(proposal));
-  if (proposal["proposal"]["content"]["@type"] !== "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade") {
+
+  const msgtype = proposal["proposal"]["content"]["@type"];
+
+  if (!["/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade", "/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal"].includes(msgtype)) {
     return false;
   }
 
@@ -57,8 +58,8 @@ const is_matched = (proposal, latest_block_height) => {
     return false;
   } else if (proposal_status === "PROPOSAL_STATUS_FAILED") {
     return false;
-  } else if (proposal_status === "PROPOSAL_STATUS_FAILED") {
-    return false;
+  } else if (proposal_status === "PROPOSAL_STATUS_VOTING_PERIOD") {
+    return true;
   } else if (proposal_status === "PROPOSAL_STATUS_DEPOSIT_PERIOD") {
     return true;
   } else if (proposal_status === "PROPOSAL_STATUS_UNSPECIFIED") {
@@ -131,4 +132,4 @@ const start = async (chain) => {
 
 }
 
-module.exports = {start};
+module.exports = {start, is_matched};
