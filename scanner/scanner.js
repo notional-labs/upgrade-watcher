@@ -2,16 +2,25 @@ const { sequelize, sync, set_ScanStatus, get_ScanStatus } = require('../lib/db.j
 const {sleep} = require("../lib/utils.js");
 
 const fetch_proposal = async (chain, proposal_id) => {
+
+
   const url = `http:///a-${chain}--${process.env.NOTIONAL_API_KEY}.gw.notionalapi.net/cosmos/gov/v1beta1/proposals/${proposal_id}`;
-  console.log(url);
+  // console.log(url);
   const response = await fetch(url);
   if (response.status === 200) {
     const data = await response.json();
     return data;
   } else {
     const data = await response.json();
-    // not found proposal return: {"code":5,"message":"proposal 900 doesn't exist","details":[]}
     if ((response.status === 404) && (data["code"] === 5)) {
+      // not found proposal return: {"code":5,"message":"proposal 900 doesn't exist","details":[]}
+      return null;
+    } else if ((response.status === 500) && (data["code"] === 2)) {
+      // 500: {
+      //   "code": 2,
+      //   "message": "codespace sdk code 29: invalid type: can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages not exactly one",
+      //   "details": []
+      // }
       return null;
     }
   }
@@ -59,12 +68,10 @@ const is_matched = (proposal, latest_block_height) => {
   return false;
 }
 
-const start = async () => {
-  console.log("start....")
+const start = async (chain) => {
+  console.log(`[${chain}] start....`)
 
   await sync();
-
-  const chain = "osmosis";
 
   let last_id = 0;
   {
@@ -77,13 +84,13 @@ const start = async () => {
   }
 
   while (true) {
-    console.log(`scanning ${last_id}`);
+    console.log(`[${chain}] scanning ${last_id}`);
     await sleep(5000);
 
     try {
       const proposal = await fetch_proposal(chain, last_id);
       if (proposal == null) {
-        console.log(`proposal ${last_id} is null`);
+        console.log(`[${chain}] proposal ${last_id} is null`);
 
         // to know if this is missing proposal id or not. We'll fetch next 5 proposals.
         // if one of them exist then it is the missing proposal id.
@@ -97,26 +104,28 @@ const start = async () => {
           (proposal_3 !== null) ||
           (proposal_4 !== null) ||
           (proposal_5 !== null)) {
-          console.log(`proposal ${last_id} is the missing proposal, continue...`);
+          console.log(`[${chain}] proposal ${last_id} is the missing proposal, continue...`);
           last_id++;
           await set_ScanStatus(chain, last_id);
           continue
         }
 
-        console.log(`retrying proposal ${last_id}...`);
+        // TODO: sleep an hour to retry in production
+        await sleep(10000);
+        console.log(`[${chain}] retrying proposal ${last_id}...`);
         continue;
       }
 
-      const latest_block_height = await get_latest_block_height()
+      const latest_block_height = await get_latest_block_height(chain);
 
       if (is_matched(proposal, latest_block_height)) {
-        console.log(`found proposal matched ${last_id}`);
+        console.log(`[${chain}] found proposal matched ${last_id}`);
       }
 
       last_id++;
       await set_ScanStatus(chain, last_id);
     } catch (e) {
-      console.log("err when processing, retrying...");
+      console.log(`[${chain}] err when processing, retrying...`);
     }
   }
 
