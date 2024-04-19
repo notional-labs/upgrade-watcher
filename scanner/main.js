@@ -1,6 +1,7 @@
 require('dotenv').config({ path: '.env', debug: true });
-const scanner = require('./scanner');
+
+const {start} = require('./scanner.js');
 
 (async () => {
-  await scanner.start();
+  await start();
 })();
