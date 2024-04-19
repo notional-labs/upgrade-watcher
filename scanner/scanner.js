@@ -1,8 +1,9 @@
 const { sequelize, sync, set_ScanStatus, get_ScanStatus } = require('../lib/db.js');
 const {sleep} = require("../lib/utils.js");
 
-const fetch_proposal = async (proposal_id) => {
-  const url = `https://api-osmosis-ia.cosmosia.notional.ventures/cosmos/gov/v1beta1/proposals/${proposal_id}`;
+const fetch_proposal = async (chain, proposal_id) => {
+  const url = `http:///a-${chain}--${process.env.NOTIONAL_API_KEY}.gw.notionalapi.net/cosmos/gov/v1beta1/proposals/${proposal_id}`;
+  console.log(url);
   const response = await fetch(url);
   if (response.status === 200) {
     const data = await response.json();
@@ -19,7 +20,7 @@ const fetch_proposal = async (proposal_id) => {
 }
 
 const get_latest_block_height = async (chain) => {
-  const url = `https://rpc-osmosis-ia.cosmosia.notional.ventures/status`;
+  const url = `http:///r-${chain}--${process.env.NOTIONAL_API_KEY}.gw.notionalapi.net/status`;
   const response = await fetch(url);
   if (response.status === 200) {
     const data = await response.json();
@@ -80,18 +81,29 @@ const start = async () => {
     await sleep(5000);
 
     try {
-      const proposal = await fetch_proposal(last_id);
+      const proposal = await fetch_proposal(chain, last_id);
       if (proposal == null) {
         console.log(`proposal ${last_id} is null`);
 
-        // to know if this is missing proposal id or not. We'll fetch next 2 proposals.
+        // to know if this is missing proposal id or not. We'll fetch next 5 proposals.
         // if one of them exist then it is the missing proposal id.
-        const proposal_1 = await fetch_proposal(last_id + 1);
-        const proposal_2 = await fetch_proposal(last_id + 2);
-        if ((proposal_1 !== null) || (proposal_2 !== null)) {
+        const proposal_1 = await fetch_proposal(chain,last_id + 1);
+        const proposal_2 = await fetch_proposal(chain,last_id + 2);
+        const proposal_3 = await fetch_proposal(chain,last_id + 3);
+        const proposal_4 = await fetch_proposal(chain,last_id + 4);
+        const proposal_5 = await fetch_proposal(chain,last_id + 5);
+        if ((proposal_1 !== null) ||
+          (proposal_2 !== null) ||
+          (proposal_3 !== null) ||
+          (proposal_4 !== null) ||
+          (proposal_5 !== null)) {
+          console.log(`proposal ${last_id} is the missing proposal, continue...`);
           last_id++;
+          await set_ScanStatus(chain, last_id);
+          continue
         }
 
+        console.log(`retrying proposal ${last_id}...`);
         continue;
       }
 
