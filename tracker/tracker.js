@@ -43,6 +43,8 @@ const start = async (chain) => {
       console.log(`[${chain}] err when processing, retrying...`);
     }
   }
+
+  console.log("Done!");
 }
 
 module.exports = {start};
