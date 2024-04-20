@@ -81,7 +81,8 @@ const start = async (chain) => {
         break;
       }
 
-      const latest_block_height = await fetch_latest_block_height(chain);
+      const upgrade_height = parseInt(proposal['proposal']['content']['plan']['height']);
+      const estimated_time = await fetch_future_block_time(chain, upgrade_height);
 
       if (is_matched(proposal, latest_block_height)) {
         console.log(`[${chain}] found proposal matched ${last_id}`);
@@ -91,8 +92,9 @@ const start = async (chain) => {
           proposal_id: last_id,
           status: proposal['proposal']['status'],
           name: proposal['proposal']['content']['plan']['name'],
-          height: parseInt(proposal['proposal']['content']['plan']['height']),
+          height: upgrade_height,
           voting_end_time: parseDate(proposal['proposal']['voting_end_time']),
+          estimated_time: estimated_time,
         }
         await put_Proposal(p);
       }
