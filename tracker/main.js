@@ -1,6 +1,6 @@
 require('dotenv').config({ path: '.env', debug: true });
 
-const {start} = require('./scanner.js');
+const {start} = require('./tracker.js');
 
 (async () => {
   const chain = "dymension";

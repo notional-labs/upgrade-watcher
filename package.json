@@ -2,6 +2,7 @@
   "private": false,
   "scripts": {
     "scanner": "node scanner/main.js",
+    "tracker": "node tracker/main.js",
     "test": "jest"
   },
   "dependencies": {
