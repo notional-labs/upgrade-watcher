@@ -1,5 +1,5 @@
 const { sync, Proposal } = require('../lib/db.js');
-const {fetch_proposal, fetch_latest_block_height} = require("../lib/rcp.js");
+const {fetch_proposal, fetch_latest_block_height, fetch_future_block_time} = require("../lib/rcp.js");
 
 const start = async (chain) => {
   console.log(`[${chain}] start....`);
@@ -20,7 +20,7 @@ const start = async (chain) => {
         await p.save();
       }
     } catch (e) {
-      console.log(`[${chain}] err when processing, retrying...`);
+      console.log(`[${chain}] err when processing, continue...`);
     }
   }
 
@@ -40,7 +40,21 @@ const start = async (chain) => {
         }
       }
     } catch (e) {
-      console.log(`[${chain}] err when processing, retrying...`);
+      console.log(`[${chain}] err when processing, continue...`);
+    }
+  }
+
+  ////////////////////////////////
+  console.log("Update estimated upgraded time");
+  proposals = await Proposal.findAll();
+
+  for (let p of proposals) {
+    try {
+      const estimated_time = await fetch_future_block_time(chain, p.height);
+      p.estimated_time = estimated_time;
+      await p.save();
+    } catch (e) {
+      console.log(`[${chain}] err when processing, continue...`);
     }
   }
 

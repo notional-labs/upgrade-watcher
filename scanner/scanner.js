@@ -1,6 +1,6 @@
 const { sequelize, sync, set_ScanStatus, get_ScanStatus, put_Proposal } = require('../lib/db.js');
 const {sleep, parseDate} = require("../lib/utils.js");
-const {fetch_proposal, fetch_latest_block_height} = require("../lib/rcp.js");
+const {fetch_proposal, fetch_latest_block_height, fetch_future_block_time} = require("../lib/rcp.js");
 
 const is_matched = (proposal, latest_block_height) => {
   // console.log(JSON.stringify(proposal));
@@ -85,14 +85,19 @@ const start = async (chain) => {
 
       if (is_matched(proposal, latest_block_height)) {
         console.log(`[${chain}] found proposal matched ${last_id}`);
+
+        const upgrade_height = parseInt(proposal['proposal']['content']['plan']['height']);
+        const estimated_time = await fetch_future_block_time(chain, upgrade_height);
+
         const p = {
           id: `${chain}_${proposal['proposal']['proposal_id']}`,
           chain,
           proposal_id: last_id,
           status: proposal['proposal']['status'],
           name: proposal['proposal']['content']['plan']['name'],
-          height: parseInt(proposal['proposal']['content']['plan']['height']),
+          height: upgrade_height,
           voting_end_time: parseDate(proposal['proposal']['voting_end_time']),
+          estimated_time: estimated_time,
         }
         await put_Proposal(p);
       }
@@ -101,6 +106,7 @@ const start = async (chain) => {
       await set_ScanStatus(chain, last_id);
     } catch (e) {
       console.log(`[${chain}] err when processing, retrying...`);
+      console.log(e.stack);
     }
   }
 
