@@ -30,7 +30,7 @@ const start = async (chain) => {
 
   for (let p of proposals) {
     try {
-      if (p.status === "PROPOSAL_STATUS_REJECTED") {
+      if (!["PROPOSAL_STATUS_REJECTED", "PROPOSAL_STATUS_FAILED"].includes(p.status)) {
         await p.destroy();
       } else {
         // check passed upgrade time
