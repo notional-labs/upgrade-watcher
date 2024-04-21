@@ -32,13 +32,15 @@ const fetch_last_proposal_id = async (chain, use_v1beta1 = false) => {
   const response = await fetch(url);
   if (response.status === 200) {
     const data = await response.json();
-    const proposal_id = parseInt(data["proposals"][0]["id"]);
+    const proposal_id = use_v1beta1 ? parseInt(data["proposals"][0]["proposal_id"]) : parseInt(data["proposals"][0]["id"]);
     return proposal_id;
   } else {
     const data = await response.json();
     if ((response.status === 501) && (data["code"] === 12)) {
       // { "code": 12, "message": "Not Implemented", "details": [] }
-      return fetch_last_proposal_id(chain, true);
+      if (use_v1beta1 === false) {
+        return await fetch_last_proposal_id(chain, true);
+      }
     }
   }
 
