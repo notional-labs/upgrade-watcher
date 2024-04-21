@@ -34,72 +34,81 @@ const is_matched = (proposal, latest_block_height) => {
   return false;
 }
 
+const process = async (chain) => {
+  console.log(`[${chain}] start....`)
+
+  let last_id = 0;
+  {
+    const ss = await get_ScanStatus(chain);
+    if (ss == null) {
+      last_id = 1;
+    } else {
+      last_id = ss['last_id'];
+    }
+  }
+
+  const last_proposal_id = await fetch_last_proposal_id(chain)
+
+  while (true) {
+    console.log(`[${chain}] scanning ${last_id}`);
+    await sleep(1000);
+
+    try {
+      const proposal = await fetch_proposal(chain, last_id);
+      if (proposal == null) {
+        console.log(`[${chain}] proposal ${last_id} is null`);
+
+        // to know if this is missing proposal id or not. We'll fetch the last proposal id.
+        // if id < last_proposal_id then it is the missing proposal id.
+        if (last_id < last_proposal_id) {
+          console.log(`[${chain}] proposal ${last_id} is the missing proposal, continue...`);
+          last_id++;
+          await set_ScanStatus(chain, last_id);
+          continue
+        }
+
+        // stop processing here
+        console.log(`[${chain}] done`);
+        break;
+      }
+
+      const latest_block_height = await fetch_latest_block_height(chain);
+
+      if (is_matched(proposal, latest_block_height)) {
+        console.log(`[${chain}] found proposal matched ${last_id}`);
+
+        const upgrade_height = parseInt(proposal['proposal']['content']['plan']['height']);
+        const estimated_time = await fetch_future_block_time(chain, upgrade_height);
+
+        const p = {
+          id: `${chain}_${proposal['proposal']['proposal_id']}`,
+          chain,
+          proposal_id: last_id,
+          status: proposal['proposal']['status'],
+          name: proposal['proposal']['content']['plan']['name'],
+          height: upgrade_height,
+          voting_end_time: parseDate(proposal['proposal']['voting_end_time']),
+          estimated_time: estimated_time,
+        }
+        await put_Proposal(p);
+      }
+
+      last_id++;
+      await set_ScanStatus(chain, last_id);
+    } catch (e) {
+      console.log(`[${chain}] process: err when processing, continue...`);
+      console.log(e.stack);
+    }
+  }
+}
+
 const start = async (chains) => {
   for (let chain of chains) {
-    console.log(`[${chain}] start....`)
-
-    let last_id = 0;
-    {
-      const ss = await get_ScanStatus(chain);
-      if (ss == null) {
-        last_id = 1;
-      } else {
-        last_id = ss['last_id'];
-      }
-    }
-
-    const last_proposal_id = await fetch_last_proposal_id(chain)
-
-    while (true) {
-      console.log(`[${chain}] scanning ${last_id}`);
-      await sleep(1000);
-
-      try {
-        const proposal = await fetch_proposal(chain, last_id);
-        if (proposal == null) {
-          console.log(`[${chain}] proposal ${last_id} is null`);
-
-          // to know if this is missing proposal id or not. We'll fetch the last proposal id.
-          // if id < last_proposal_id then it is the missing proposal id.
-          if (last_id < last_proposal_id) {
-            console.log(`[${chain}] proposal ${last_id} is the missing proposal, continue...`);
-            last_id++;
-            await set_ScanStatus(chain, last_id);
-            continue
-          }
-
-          // stop processing here
-          console.log(`[${chain}] done`);
-          break;
-        }
-
-        const latest_block_height = await fetch_latest_block_height(chain);
-
-        if (is_matched(proposal, latest_block_height)) {
-          console.log(`[${chain}] found proposal matched ${last_id}`);
-
-          const upgrade_height = parseInt(proposal['proposal']['content']['plan']['height']);
-          const estimated_time = await fetch_future_block_time(chain, upgrade_height);
-
-          const p = {
-            id: `${chain}_${proposal['proposal']['proposal_id']}`,
-            chain,
-            proposal_id: last_id,
-            status: proposal['proposal']['status'],
-            name: proposal['proposal']['content']['plan']['name'],
-            height: upgrade_height,
-            voting_end_time: parseDate(proposal['proposal']['voting_end_time']),
-            estimated_time: estimated_time,
-          }
-          await put_Proposal(p);
-        }
-
-        last_id++;
-        await set_ScanStatus(chain, last_id);
-      } catch (e) {
-        console.log(`[${chain}] err when processing, retrying...`);
-        console.log(e.stack);
-      }
+    try {
+      await process(chain);
+    } catch (e) {
+      console.log(`[${chain}] start: err when processing, continue...`);
+      console.log(e.stack);
     }
   }
 
