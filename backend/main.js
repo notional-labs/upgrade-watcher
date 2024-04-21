@@ -16,7 +16,7 @@ const cronjob = async () => {
     const chains = process.env.CHAINS.split(' ');
 
     await scanner.start(chains);
-    await tracker.start(chains);
+    await tracker.start();
 
     await sleep(60000);
   } catch (e) {
