@@ -3,7 +3,7 @@ const { sync } = require('../lib/db.js');
 const {start} = require('./scanner.js');
 
 (async () => {
-  const chain = "dymension";
+  const chains = "dymension".split(' ');
   await sync();
-  await start(chain);
+  await start(chains);
 })();

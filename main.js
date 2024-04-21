@@ -13,8 +13,10 @@ const cronjob = async () => {
   }
 
   try {
-    await scanner.start();
-    await tracker.start();
+    const chains = process.env.DB_PATH.split(' ');
+
+    await scanner.start(chains);
+    await tracker.start(chains);
 
     await sleep(60000);
   } catch (e) {
