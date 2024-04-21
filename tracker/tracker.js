@@ -26,11 +26,11 @@ const start = async (chain) => {
 
   ////////////////////////////////
   console.log("Remove proposals which no longer needed");
-  proposals = await Proposal.findAll();
+  // proposals = await Proposal.findAll();
 
   for (let p of proposals) {
     try {
-      if (!["PROPOSAL_STATUS_REJECTED", "PROPOSAL_STATUS_FAILED"].includes(p.status)) {
+      if (["PROPOSAL_STATUS_REJECTED", "PROPOSAL_STATUS_FAILED"].includes(p.status)) {
         await p.destroy();
       } else {
         // check passed upgrade time
