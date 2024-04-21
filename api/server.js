@@ -1,3 +1,4 @@
+const { Proposal } = require('../lib/db.js');
 const express = require('express');
 
 /**
@@ -8,14 +9,15 @@ const express = require('express');
  */
 const list = async (req, res) => {
   try {
-    res.send({status: "success", data: null});
+    const proposals = await Proposal.findAll();
+    res.send({status: "success", data: proposals});
   } catch (err) {
     res.send({status: "error", message: err.message});
   }
 };
 
 const start = () => {
-  app = express()
+  const app = express()
   app.use(express.json({limit: '100mb'})); // for parsing application/json
   app.get('/list', list);
   app.listen(8800, () => {

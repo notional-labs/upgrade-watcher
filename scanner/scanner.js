@@ -37,8 +37,6 @@ const is_matched = (proposal, latest_block_height) => {
 const start = async (chain) => {
   console.log(`[${chain}] start....`)
 
-  await sync();
-
   let last_id = 0;
   {
     const ss = await get_ScanStatus(chain);
