@@ -52,6 +52,12 @@ const fetch_latest_block_height = async (chain) => {
   const response = await fetch(url);
   if (response.status === 200) {
     const data = await response.json();
+
+    // fix sei
+    if (chain === "sei") {
+      return parseInt(data["sync_info"]["latest_block_height"]);
+    }
+
     return parseInt(data["result"]["sync_info"]["latest_block_height"]);
   }
 
