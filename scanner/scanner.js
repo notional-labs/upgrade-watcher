@@ -1,6 +1,6 @@
 const { sequelize, sync, set_ScanStatus, get_ScanStatus, put_Proposal } = require('../lib/db.js');
 const {sleep, parseDate} = require("../lib/utils.js");
-const {fetch_proposal, fetch_latest_block_height, fetch_future_block_time} = require("../lib/rcp.js");
+const {fetch_proposal, fetch_latest_block_height, fetch_future_block_time, fetch_last_proposal_id} = require("../lib/rcp.js");
 
 const is_matched = (proposal, latest_block_height) => {
   // console.log(JSON.stringify(proposal));
@@ -48,6 +48,8 @@ const start = async (chains) => {
       }
     }
 
+    const last_proposal_id = await fetch_last_proposal_id(chain)
+
     while (true) {
       console.log(`[${chain}] scanning ${last_id}`);
       await sleep(1000);
@@ -57,18 +59,9 @@ const start = async (chains) => {
         if (proposal == null) {
           console.log(`[${chain}] proposal ${last_id} is null`);
 
-          // to know if this is missing proposal id or not. We'll fetch next 5 proposals.
-          // if one of them exist then it is the missing proposal id.
-          const proposal_1 = await fetch_proposal(chain, last_id + 1);
-          const proposal_2 = await fetch_proposal(chain, last_id + 2);
-          const proposal_3 = await fetch_proposal(chain, last_id + 3);
-          const proposal_4 = await fetch_proposal(chain, last_id + 4);
-          const proposal_5 = await fetch_proposal(chain, last_id + 5);
-          if ((proposal_1 !== null) ||
-            (proposal_2 !== null) ||
-            (proposal_3 !== null) ||
-            (proposal_4 !== null) ||
-            (proposal_5 !== null)) {
+          // to know if this is missing proposal id or not. We'll fetch the last proposal id.
+          // if id < last_proposal_id then it is the missing proposal id.
+          if (last_id < last_proposal_id) {
             console.log(`[${chain}] proposal ${last_id} is the missing proposal, continue...`);
             last_id++;
             await set_ScanStatus(chain, last_id);
