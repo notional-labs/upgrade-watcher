@@ -13,7 +13,7 @@ const cronjob = async () => {
   }
 
   try {
-    const chains = process.env.DB_PATH.split(' ');
+    const chains = process.env.CHAINS.split(' ');
 
     await scanner.start(chains);
     await tracker.start(chains);
