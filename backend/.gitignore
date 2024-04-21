@@ -19,4 +19,4 @@ yarn-error.log*
 .next
 */.env
 
-/backend/database.sqlite
+/database.sqlite
