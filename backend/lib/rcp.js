@@ -32,6 +32,9 @@ const fetch_last_proposal_id = async (chain, use_v1beta1 = false) => {
   const response = await fetch(url);
   if (response.status === 200) {
     const data = await response.json();
+    if (data["proposals"].length <= 0) { // fix chain with no proposals
+      return 0;
+    }
     const proposal_id = use_v1beta1 ? parseInt(data["proposals"][0]["proposal_id"]) : parseInt(data["proposals"][0]["id"]);
     return proposal_id;
   } else {
