@@ -1,4 +1,4 @@
-const { Proposal } = require('../lib/db.js');
+const { sequelize, Proposal } = require('../lib/db.js');
 const express = require('express');
 
 /**
@@ -9,7 +9,9 @@ const express = require('express');
  */
 const list = async (req, res) => {
   try {
-    const proposals = await Proposal.findAll();
+    const proposals = await Proposal.findAll({
+      order: sequelize.literal("estimated_time"),
+    });
     res.send({status: "success", data: proposals});
   } catch (err) {
     res.send({status: "error", message: err.message});
