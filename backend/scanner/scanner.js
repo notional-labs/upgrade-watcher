@@ -51,7 +51,7 @@ const process = async (chain) => {
 
   while (true) {
     console.log(`[${chain}] scanning ${last_id}`);
-    await sleep(1000);
+    await sleep(100);
 
     try {
       const proposal = await fetch_proposal(chain, last_id);
