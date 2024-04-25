@@ -76,8 +76,15 @@ const fetch_future_block_time  = async (chain, future_height) => {
     throw new Error("fetch status error");
   }
   let data = await response.json();
-  const current_height = parseInt(data["result"]["sync_info"]["latest_block_height"]);
-  const current_time = parseDate(data["result"]["sync_info"]["latest_block_time"]);
+  let current_height = 0;
+  let current_time = 0;
+  if (chain === "sei") {
+    current_height = parseInt(data["sync_info"]["latest_block_height"]);
+    current_time = parseDate(data["sync_info"]["latest_block_time"]);
+  } else {
+    current_height = parseInt(data["result"]["sync_info"]["latest_block_height"]);
+    current_time = parseDate(data["result"]["sync_info"]["latest_block_time"]);
+  }
 
 
   /////
@@ -87,7 +94,13 @@ const fetch_future_block_time  = async (chain, future_height) => {
     throw new Error("fetch status error");
   }
   data = await response.json();
-  const previous_time = parseDate(data["result"]["block"]["header"]["time"]);
+  let previous_time = ""
+
+  if (chain === "sei") {
+    previous_time = parseDate(data["block"]["header"]["time"]);
+  } else {
+    previous_time = parseDate(data["result"]["block"]["header"]["time"]);
+  }
 
   /////
   const estimated_time = estimate_future_block_time({future_height, current_height, current_time, previous_time, diff_block});
