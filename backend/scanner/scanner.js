@@ -96,6 +96,7 @@ const process = async (chain) => {
       last_id++;
       await set_ScanStatus(chain, last_id);
     } catch (e) {
+      await sleep(1000);
       console.log(`[${chain}] process: err when processing, continue...`);
       console.log(e.stack);
     }
