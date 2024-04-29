@@ -41,6 +41,12 @@ const DataTable = (props) => {
           render: (text) => <>{text}</>,
         },
         {
+          title: 'status',
+          dataIndex: 'status',
+          key: 'status',
+          render: (text) => <>{text.replace("PROPOSAL_STATUS_", "")}</>,
+        },
+        {
           title: 'height',
           dataIndex: 'height',
           key: 'height',
